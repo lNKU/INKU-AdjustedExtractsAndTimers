@@ -77,7 +77,6 @@ class AdjustedExtractsAndTimers implements IPostDBLoadMod, IPreAkiLoadMod {
                             
                             if (!this.excludedMaps.includes(mapName.toLowerCase())) {
                                 this.adjustMapData(mapName, this.locationsDb);
-                                // this.logger.warning(`[${this.modName}]: ${displayedMapName.toUpperCase()} extract timers and requirements re-randomized.`)
                                 
                             }
                         }
