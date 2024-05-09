@@ -14,6 +14,7 @@ class AdjustedExtractsAndTimers implements IPostDBLoadMod, IPreAkiLoadMod {
     private logger: ILogger; 
     private debug: boolean = false;
 
+    private config = require("../config/config.json");
     private databaseServer: DatabaseServer;
     private staticRouterModService: StaticRouterModService;
     private profileHelper: ProfileHelper;
@@ -69,14 +70,11 @@ class AdjustedExtractsAndTimers implements IPostDBLoadMod, IPreAkiLoadMod {
                 {
                     url: "/client/match/offline/end",
                     action: (url, info, sessionId, output) => 
-                    {
-                        const profile = this.profileHelper.getFullProfile(sessionId);
-                        
+                    {                        
                         for (const mapName in this.locationsDb) {
-                            const displayedMapName = this.mapRename[mapName] || this.capitalizeFirstLetter(mapName);
                             
                             if (!this.excludedMaps.includes(mapName.toLowerCase())) {
-                                this.adjustMapData(mapName, this.locationsDb);
+                                this.refreshExtracts(mapName, this.locationsDb);
                                 
                             }
                         }
@@ -144,12 +142,29 @@ class AdjustedExtractsAndTimers implements IPostDBLoadMod, IPreAkiLoadMod {
                 
             }
 
-            if (this.debug) {
+            if (this.config.debug) {
                 this.logger.logWithColor(`[*** DEBUG ***]: ${displayedMapName.toUpperCase()} EXTRACT: ${extractName} has a ${extract.ExfiltrationTime} second extract timer, costs ${extract.Count} roubles and has a ${extract.Chance}% chance of being active.`, LogTextColor.YELLOW);          
             
             }
         });            
     } 
+
+    private refreshExtracts(mapName, locationsDb): void {
+        const mapBase = locationsDb[mapName]?.base;
+        const displayedMapName = this.mapRename[mapName] || this.capitalizeFirstLetter(mapName);
+
+        if (!mapBase) {
+            this.logger.debug(`MAP: ${mapName} has no base json file, skipping.`);
+            return;
+        }
+        
+        if (this.excludedMaps.includes(mapName.toLowerCase())) {
+            return;
+        }
+        
+        this.updateExtracts(mapBase, displayedMapName);
+        this.logger.warning(`[${this.modName}]: ${displayedMapName.toUpperCase()} extract timers and requirements re-randomized.`)
+    }
 
     private adjustMapData(mapName, locationsDb): void {
         const mapBase = locationsDb[mapName]?.base;
@@ -167,7 +182,7 @@ class AdjustedExtractsAndTimers implements IPostDBLoadMod, IPreAkiLoadMod {
         
         this.updateMapBase(mapBase, requiredLevel);
         this.updateExtracts(mapBase, displayedMapName);
-        this.logger.warning(`[${this.modName}]: ${displayedMapName.toUpperCase()} extract timers and requirements randomized.`)
+        this.logger.warning(`[${this.modName}]: Initial ${displayedMapName.toUpperCase()} extract timers and requirements randomized.`)
     }
 }
 
