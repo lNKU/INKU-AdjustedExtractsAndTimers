@@ -11,8 +11,7 @@ import type {StaticRouterModService} from "@spt-aki/services/mod/staticRouter/St
 class AdjustedExtractsAndTimers implements IPostDBLoadMod, IPreAkiLoadMod {
     readonly modName = "AdjustedExtractsAndTimers";
     
-    private logger: ILogger; 
-    private debug: boolean = false;
+    private logger: ILogger;
 
     private config = require("../config/config.json");
     private databaseServer: DatabaseServer;
